@@ -1,0 +1,43 @@
+NAME
+    TinyAuth - Extremely light-weight web-based authentication manager
+
+DESCRIPTION
+    TinyAuth is an extremely light-weight authentication management web
+    application, initially created to assist in managing a subversion
+    repository.
+
+    It is designed to provide the basic functionality of adding and removing
+    users, and handling password maintenance with as little code and fuss as
+    possible.
+
+    More importantly, it is intended to be extremely easy to install and set
+    up, even on shared hosting accounts. The interface is simple enough that
+    it can be used on typical limited-functionality browsers such as the
+    text-mode lynx browser, and the browsers found in most mobile phones.
+
+    The intent is to allow users and be added, removed and repaired from
+    anywhere, even without a computer or "regular" internet connection.
+
+SUPPORT
+    All bugs should be filed via the bug tracker at
+
+    <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=TinyAuth>
+
+    For other issues, or commercial enhancement or support, contact the
+    author.
+
+AUTHORS
+    Adam Kennedy <adamk@cpan.org>
+
+SEE ALSO
+    <http://ali.as/>, CGI::Capture
+
+COPYRIGHT
+    Copyright 2007 Adam Kennedy.
+
+    This program is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
+    The full text of the license can be found in the LICENSE file included
+    with this module.
+
