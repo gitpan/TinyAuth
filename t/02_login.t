@@ -5,10 +5,10 @@ use vars qw{$VERSION};
 BEGIN {
 	$|       = 1;
 	$^W      = 1;
-	$VERSION = '0.90';
+	$VERSION = '0.91';
 }
 
-use Test::More tests => 36;
+use Test::More tests => 45;
 
 use File::Spec::Functions ':ALL';
 use YAML::Tiny;
@@ -93,6 +93,39 @@ SCOPE: {
 <p><a href="?a=m">I want to promote an account to admin</a></p>
 <hr>
 <p><i>Powered by <a href="http://search.cpan.org/perldoc?TinyAuth">TinyAuth</a></i></p>
+</body>
+</html>
+
+END_HTML
+}
+
+
+
+
+
+#####################################################################
+# Bad Login
+
+SCOPE: {
+	my $instance = t::lib::TinyAuth->new( "02_login4.cgi" );
+	is( $instance->user, undef, '->user is not set' );
+
+	# Run the instance
+	is( $instance->run, 1, '->run ok' );
+
+	# Check the output
+	cgi_cmp( $instance->stdout, <<"END_HTML", '->stdout returns as expect' );
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>TinyAuth $VERSION</title>
+</head>
+
+<body>
+<h1>Error</h1>
+<h2>Incorrect password</h2>
 </body>
 </html>
 

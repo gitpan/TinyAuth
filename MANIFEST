@@ -28,6 +28,7 @@ t/99_author.t
 t/data/02_login1.cgi
 t/data/02_login2.cgi
 t/data/02_login3.cgi
+t/data/02_login4.cgi
 t/data/03_forgot1.cgi
 t/data/03_forgot2.cgi
 t/data/03_forgot3.cgi

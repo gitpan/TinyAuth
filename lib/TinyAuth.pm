@@ -39,7 +39,7 @@ use Email::Stuff     ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.90';
+	$VERSION = '0.91';
 }
 
 use Object::Tiny qw{
@@ -145,19 +145,18 @@ sub new {
 			$self->cgi->param('_e'),
 			$self->cgi->param('_p'),
 		);
-		unless ( $self->is_user_admin($self->{user}) ) {
-			$self->{action} = 'error';
-			$self->{error}  = 'Only administrators are allowed to do that';
-		}
 	} elsif ( $self->cgi->cookie('e') and $self->cgi->cookie('p') ) {
 		$self->{user} = $self->authenticate(
 			$self->cgi->cookie('e'),
 			$self->cgi->cookie('p'),
 		);
+	}
+	if ( ref $self->{user} ) {
 		unless ( $self->is_user_admin($self->{user}) ) {
-			$self->{action} = 'error';
-			$self->{error}  = 'Only administrators are allowed to do that';
+			$self->error('Only administrators are allowed to do that');
 		}
+	} else {
+		delete $self->{user};
 	}
 
 	return $self;
@@ -213,7 +212,7 @@ sub run {
 	} elsif ( $self->action eq 'e' ) {
 		return $self->action_delete;
 	} elsif ( $self->action eq 'error' ) {
-		return $self->view_error( delete $self->{error} );
+		return 1;
 	} else {
 		return $self->view_index;
 	}
@@ -629,6 +628,7 @@ sub error {
 	$self->print_template(
 		$self->html_error,
 	);
+	$self->{action} = 'error';
 	return 1;
 }
 
