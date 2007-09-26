@@ -39,8 +39,10 @@ t/data/06_adduser1.cgi
 t/data/06_adduser2.cgi
 t/data/07_promote1.cgi
 t/data/07_promote2.cgi
+t/data/07_promote3.cgi
 t/data/08_delete1.cgi
 t/data/08_delete2.cgi
+t/data/08_delete3.cgi
 t/data/htpasswd
 t/lib/Test.pm
 t/lib/TinyAuth.pm

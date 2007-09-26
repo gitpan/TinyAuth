@@ -32,4 +32,4 @@ requires:
   String::MkPasswd: 0.02
   YAML::Tiny: 1.12
   perl: 5.005
-version: 0.91
+version: 0.92

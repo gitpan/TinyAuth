@@ -16,7 +16,7 @@ unless ( $ENV{AUTOMATED_TESTING} ) {
 eval "use Test::Pod 1.00";
 
 # Can we run the version tests
-eval "use Test::MinimumVersion;";
+eval "use Test::MinimumVersion 0.007;";
 
 
 
@@ -71,6 +71,6 @@ if ( $Test::Pod::VERSION ) {
 }
 
 # Test version
-if ( $Test::MinimumVersion::VERSION and $Test::MinimumVersion::VERSION > 0.05 ) {
-	all_minimum_version_from_metayml_ok();
+if ( $Test::MinimumVersion::VERSION ) {
+	all_minimum_version_from_metayml_ok( { no_plan => 1 } );
 }
