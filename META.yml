@@ -25,11 +25,11 @@ requires:
   Carp: 0
   Email::Send: 2.182
   Email::Stuff: 2.05
+  File::Spec: 0.80
   FindBin: 0
   Module::CGI::Install: 0.04
-  Object::Tiny: 1.02
-  Params::Util: 0.21
+  Scalar::Util: 1.15
   String::MkPasswd: 0.02
   YAML::Tiny: 1.12
   perl: 5.005
-version: 0.92
+version: 0.93

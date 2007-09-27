@@ -2,21 +2,35 @@ NAME
     TinyAuth - Extremely light-weight web-based authentication manager
 
 DESCRIPTION
-    TinyAuth is an extremely light-weight authentication management web
-    application, initially created to assist in managing a subversion
-    repository.
+    TinyAuth is a light-weight authentication management web application
+    with a focus on usability.
 
-    It is designed to provide the basic functionality of adding and removing
+    It was initially created to assist in managing a subversion repository
+    but also usable for anything where authentication can be run from a
+    .htpasswd file.
+
+    It provides the basic functionality needed for adding and removing
     users, and handling password maintenance with as little code and fuss as
-    possible.
+    possible, while still applying robust and correct security practices.
 
-    More importantly, it is intended to be extremely easy to install and set
-    up, even on shared hosting accounts. The interface is simple enough that
-    it can be used on typical limited-functionality browsers such as the
-    text-mode lynx browser, and the browsers found in most mobile phones.
+    It is intended to be extremely easy to install and set up, even on
+    shared hosting accounts. The interface is so simple and pages are so
+    small (most under 1k) that it can be used on most limited-functionality
+    browsers such as the text-mode browsers, and the strange micro-browsers
+    found inside video games and mobile phones.
 
-    The intent is to allow users and be added, removed and repaired from
+    The goal is to allow users and be added, removed and fixed from
     anywhere, even without a computer or "regular" internet connection.
+
+STATUS
+    TinyAuth is currently currently feature-complete and undergoing
+    polishing and testing. Part of this process focuses on naming
+    ("TinyAuth" is just a working codename), reduction of dependencies,
+    improvements to the installer, and other similar tasks.
+
+    Releases are provided "as is" for the curious, and installation is not
+    recommended for production purposes at this time. As a consequence,
+    documentation on the install process is not currently included.
 
 SUPPORT
     All bugs should be filed via the bug tracker at
