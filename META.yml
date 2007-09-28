@@ -4,9 +4,8 @@ author: Adam Kennedy <adamk@cpan.org>
 build_requires: 
   File::Copy: 0
   File::Remove: 0.37
-  Test::LongString: 0.11
+  IPC::Run3: 0.034
   Test::More: 0.42
-  Test::Script: 1.02
 distribution_type: module
 generated_by: Module::Install version 0.65
 license: perl
@@ -23,8 +22,9 @@ requires:
   CGI: 3.00
   CGI::Cookie: 0
   Carp: 0
+  Email::MIME: 1.859
+  Email::MIME::Creator: 1.453
   Email::Send: 2.182
-  Email::Stuff: 2.05
   File::Spec: 0.80
   FindBin: 0
   Module::CGI::Install: 0.04
@@ -32,4 +32,4 @@ requires:
   String::MkPasswd: 0.02
   YAML::Tiny: 1.12
   perl: 5.005
-version: 0.93
+version: 0.94
