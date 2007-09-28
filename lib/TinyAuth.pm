@@ -6,6 +6,16 @@ package TinyAuth;
 
 TinyAuth - Extremely light-weight web-based authentication manager
 
+=head1 STATUS
+
+TinyAuth is currently currently feature-complete and undergoing polishing
+and testing. Part of this process focuses on naming ("TinyAuth" is just
+a working codename), reduction of dependencies, improvements to the
+installer, and other similar tasks.
+
+Releases are provided "as is" for the curious, and installation is not
+recommended for production purposes at this time.
+
 =head1 DESCRIPTION
 
 B<TinyAuth> is a light-weight authentication management web application
@@ -28,16 +38,61 @@ video games and mobile phones.
 The goal is to allow users and be added, removed and fixed from
 anywhere, even without a computer or "regular" internet connection.
 
-=head1 STATUS
+=head2 Installing TinyAuth
 
-TinyAuth is currently currently feature-complete and undergoing polishing
-and testing. Part of this process focuses on naming ("TinyAuth" is just
-a working codename), reduction of dependencies, improvements to the
-installer, and other similar tasks.
+B<TinyAuth> uses an installation module called L<Module::CGI::Install>.
 
-Releases are provided "as is" for the curious, and installation is not
-recommended for production purposes at this time. As a consequence,
-documentation on the install process is not currently included.
+The process involves firstly installing the TinyAuth distribution to your
+(Unix, CGI-capable) system via the normal CPAN client, and then running a
+"CGI Installer" program, which will install a working instance of the
+application to a specific CGI path.
+
+As well ensuring that the CGI setup is correct, this also means that
+TinyAuth can be installed multiple times on a single host, any each copy
+can be tweaked or modded as much as you like, without impacting any other
+users.
+
+At the present time, you will need the ability to install modules from CPAN
+(which generally means root access) but once the application itself is
+finished, additional improvements are planned to the installer to allow for
+various alternative installation methods.
+
+B<Step 1>
+
+Install TinyAuth with your CPAN client
+
+  adam@svn:~/svn.ali.as$ sudo cpan -i TinyAuth
+
+B<Step 2>
+
+Run the CGI installation, following the prompts
+
+  adam@svn:~/svn.ali.as$ cgi_install TinyAuth
+  CGI Directory: [default /home/adam/svn.ali.as] cgi-bin
+  CGI URI: http://svn.ali.as/cgi-bin
+  adam@svn:~/svn.ali.as$
+
+The installation is currently extremely crude, so once installed, you
+currently need to open the tinyauth.conf file created by the installer
+and edit it by hand (this will be fixed in a forthcoming release).
+
+The config file is YAML and should look something like this:
+
+  adam@svn:~/svn.ali.as$ cat cgi-bin/tinyauth.conf
+  ---
+  email_from: adamk@cpan.org
+  email_driver: SMTP
+  htpasswd: /home/adam/svn.ali.as/cgi-bin/.htpasswd
+  
+  adam@svn:~/svn.ali.as$
+
+(For the security concious amoungst you, yes I know that putting the
+.htpasswd there is a bad idea. No, no real service is actually using
+that file)
+
+The C<email_driver> value is linked to L<Email::Send>. Use either
+"Sendmail" to send via local sendmail, or "SMTP" to send via an SMTP
+server on localhost.
 
 =cut
 
@@ -54,7 +109,7 @@ use Email::Send          ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.94';
+	$VERSION = '0.95';
 }
 
 
@@ -156,31 +211,51 @@ sub new {
 
 	# Set the base arguments
 	$self->{args} ||= {
-		CLASS    => ref($self),
-		VERSION  => $self->VERSION,
-		HOMEPAGE => $self->homepage,
-		TITLE    => $self->title,
-		DOCTYPE  => $self->html__doctype,
-		HEAD     => $self->html__head,
-		HOME     => $self->html__home,
+		CLASS       => ref($self),
+		VERSION     => $self->VERSION,
+		SCRIPT_NAME => $ENV{SCRIPT_NAME},
+		HOMEPAGE    => $self->homepage,
+		TITLE       => $self->title,
+		DOCTYPE     => $self->html__doctype,
+		HEAD        => $self->html__head,
 	};
 
 	# Apply security policy
+	my ($username, $password) = ();
 	if ( $self->cgi->param('_e') or $self->cgi->param('_p') ) {
-		$self->{user} = $self->authenticate(
-			$self->cgi->param('_e'),
-			$self->cgi->param('_p'),
-		);
+		$username = $self->cgi->param('_e');
+		$password = $self->cgi->param('_p');
+		$self->{user} = $self->authenticate( $username, $password );
 	} elsif ( $self->cgi->cookie('e') and $self->cgi->cookie('p') ) {
-		$self->{user} = $self->authenticate(
-			$self->cgi->cookie('e'),
-			$self->cgi->cookie('p'),
-		);
+		$username = $self->cgi->cookie('e');
+		$password = $self->cgi->cookie('p');
+		$self->{user} = $self->authenticate( $username, $password );
+	} else {
+		delete $self->{user};
 	}
 	if ( ref $self->{user} ) {
 		unless ( $self->is_user_admin($self->{user}) ) {
 			$self->error('Only administrators are allowed to do that');
 		}
+
+		# Authenticated ok, set the cookies
+		$self->{header} = CGI::header(
+			-cookie => [
+				CGI::cookie(
+					-name    => 'e',
+					-value   => $username,
+					-path    => '/',
+					-expires => '+1d',
+				),
+				CGI::cookie(
+					-name    => 'p',
+					-value   => $password,
+					-path    => '/',
+					-expires => '+1d',
+				),
+			],
+		);
+
 	} else {
 		delete $self->{user};
 	}
@@ -290,8 +365,8 @@ sub mkpasswd {
 	my @lower = ( 'a' .. 'z' );
 	my @nums  = ( 0   .. 9   );
 	my @spec  = (
-		qw| ^ & * ( ) - = _ + [ ] { } \ ; : ' " < > . ? / |,
-		",", "|"
+		qw| ^ & * ( ) - = _ + [ ] { } \ ; : < > . ? / |,
+		",", "|", '"', "'",
 	);
 
 	# Assemble the password characters
@@ -350,55 +425,6 @@ sub view_index {
 			: $self->html_public
 	);
 	return 1;
-}
-
-# Login
-sub action_login {
-	my $self = shift;
-	my $email = _STRING($self->cgi->param('_e'));
-	unless ( $email ) {
-		return $self->error("You did not enter an email address");
-	}
-
-	# Does the account exist
-	my $user = $self->auth->lookup_user($email);
-	unless ( $user ) {
-		return $self->error("No account for that email address");
-	}
-
-	# Get and check the password
-	my $password = _STRING($self->cgi->param('_p'));
-	unless ( $password ) {
-		return $self->error("You did not enter your current password");
-	}
-	unless ( $user->check_password($password) ) {
-		sleep 3;
-		return $self->error("Incorrect current password");
-	}
-
-	# Only admins can login
-	$self->admins_only($user) or return 1;
-
-	# Authenticated, set the cookies
-	$self->{header} = CGI::header(
-		-cookie => [
-			CGI::cookie(
-				-name    => 'e',
-				-value   => $email,
-				-path    => '/',
-				-expires => '+1d',
-			),
-			CGI::cookie(
-				-name    => 'p',
-				-value   => $password,
-				-path    => '/',
-				-expires => '+1d',
-			),
-		],
-	);
-
-	# Return to the main page
-	$self->view_index;
 }
 
 # Logout
@@ -881,17 +907,6 @@ END_HTML
 
 
 
-
-
-
-
-sub html__home { <<'END_HTML' }
-<p><a href="?a=i">Back to the main page</a></p>
-END_HTML
-
-
-
-
 sub html_public { <<'END_HTML' }
 [% DOCTYPE %]
 <html>
@@ -901,7 +916,7 @@ sub html_public { <<'END_HTML' }
 <p><a href="?a=f">I forgot my password</a></p>
 <p><a href="?a=c">I want to change my password</a></p>
 <h2>Admin</h2>
-<form method="post" name="f" action="">
+<form method="post" name="f" action="[% SCRIPT_NAME %]">
 <p>Email</p>
 <p><input type="text" name="_e" size="30"></p>
 <p>Password</p>
@@ -927,10 +942,11 @@ sub html_index { <<'END_HTML' }
 <p><a href="?a=f">I forgot my password</a></p>
 <p><a href="?a=c">I want to change my password</a></p>
 <h2>Admin</h2>
-<p><a href="?a=n">I want to add a new account</a></p>
-<p><a href="?a=l">I want to see all the accounts</a></p>
-<p><a href="?a=d">I want to delete an account</a></p>
-<p><a href="?a=m">I want to promote an account to admin</a></p>
+<p><a href="?a=n">Add a new account</a></p>
+<p><a href="?a=l">List all accounts</a></p>
+<p><a href="?a=d">Delete an account</a></p>
+<p><a href="?a=m">Promote an account</a></p>
+<p><a href="?a=o">Logout</a></p>
 <hr>
 <p><i>Powered by <a href="http://search.cpan.org/perldoc?TinyAuth">TinyAuth</a></i></p>
 </body>
@@ -947,7 +963,7 @@ sub html_forgot { <<'END_HTML' }
 [% HEAD %]
 <body>
 <h2>You don't know your password</h2>
-<form method="post" name="f" action="">
+<form method="post" name="f" action="[% SCRIPT_NAME %]">
 <input type="hidden" name="a" value="r">
 <p>I can't tell you what your current password is, but I can send you a new one.</p>
 <p>&nbsp;</p>
@@ -1019,8 +1035,8 @@ sub html_promote { <<'END_HTML' }
 [% HEAD %]
 <body>
 <h2>Select Account(s) to Promote</h2>
-<form name="f" action="">
-<input type="hidden" name="a" value="m">
+<form name="f" action="[% SCRIPT_NAME %]">
+<input type="hidden" name="a" value="b">
 [% users %]
 <input type="submit" name="s" value="Promote">
 </form>
@@ -1038,7 +1054,7 @@ sub html_delete { <<'END_HTML' }
 [% HEAD %]
 <body>
 <h2>Select Account(s) to Delete</h2>
-<form name="f" action="">
+<form name="f" action="[% SCRIPT_NAME %]">
 <input type="hidden" name="a" value="e">
 [% users %]
 <input type="submit" name="s" value="Delete">
@@ -1146,11 +1162,7 @@ END_TEXT
 
 =head1 SUPPORT
 
-All bugs should be filed via the bug tracker at
-
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=TinyAuth>
-
-For other issues, or commercial enhancement or support, contact the author.
+For all issues, contact the author.
 
 =head1 AUTHORS
 
