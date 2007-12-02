@@ -16,6 +16,7 @@ MANIFEST			This list of files
 META.yml
 README
 script/tinyauth
+script/tinyauth.pl
 t/01_compile.t
 t/02_login.t
 t/03_forgot.t
@@ -24,7 +25,8 @@ t/05_change.t
 t/06_adduser.t
 t/07_promote.t
 t/08_delete.t
-t/99_author.t
+t/98_pod.t
+t/99_pmv.t
 t/data/02_login1.cgi
 t/data/02_login2.cgi
 t/data/02_login3.cgi
